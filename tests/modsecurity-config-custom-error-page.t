@@ -50,7 +50,7 @@ http {
 
     server {
         listen       127.0.0.1:8080;
-        server_name  localhost;
+        server_name  s1;
 
         error_page 403 /403.html;
 
@@ -76,8 +76,8 @@ http {
     }
 
     server {
-        listen       127.0.0.1:8081;
-        server_name  localhost;
+        listen       127.0.0.1:8080;
+        server_name  s2;
 
         modsecurity on;
         modsecurity_rules '
@@ -126,12 +126,12 @@ my $t3;
 my $t4;
 
 # Performing requests to a server with ModSecurity enabled at location context
-$t1 = http_get('/index.html?what=root');
-$t2 = http_get('/index.html?what=other');
+$t1 = http_get_host('s1', '/index.html?what=root');
+$t2 = http_get_host('s1', '/index.html?what=other');
 
 # Performing requests to a server with ModSecurity enabled at server context
-$t3 = http_get2('/index.html?what=root');
-$t4 = http_get2('/index.html?what=other');
+$t3 = http_get_host('s2', '/index.html?what=root');
+$t4 = http_get_host('s2', '/index.html?what=other');
 
 my $local = do {
     local $/ = undef;
@@ -159,83 +159,13 @@ unlike($global, qr/what=other/, 'ModSecurity at server / other not present in au
 
 ###############################################################################
 
-sub http_get2($;%) {
-	my ($url, %extra) = @_;
-	return http2(<<EOF, %extra);
+sub http_get_host {
+	my ($host, $url) = @_;
+	return http(<<EOF);
 GET $url HTTP/1.0
-Host: localhost
+Host: $host
 
 EOF
-}
-
-sub http2($;%) {
-	my ($request, %extra) = @_;
-
-	my $s = http_start2($request, %extra);
-
-	return $s if $extra{start} or !defined $s;
-	return http_end2($s);
-}
-
-sub http_start2($;%) {
-	my ($request, %extra) = @_;
-	my $s;
-
-	eval {
-		local $SIG{ALRM} = sub { die "timeout\n" };
-		local $SIG{PIPE} = sub { die "sigpipe\n" };
-		alarm(8);
-
-		$s = $extra{socket} || IO::Socket::INET->new(
-			Proto => 'tcp',
-			PeerAddr => '127.0.0.1:' . port(8081)
-		)
-			or die "Can't connect to nginx: $!\n";
-
-		log_out($request);
-		$s->print($request);
-
-		select undef, undef, undef, $extra{sleep} if $extra{sleep};
-		return '' if $extra{aborted};
-
-		if ($extra{body}) {
-			log_out($extra{body});
-			$s->print($extra{body});
-		}
-
-		alarm(0);
-	};
-	alarm(0);
-	if ($@) {
-		log_in("died: $@");
-		return undef;
-	}
-
-	return $s;
-}
-
-sub http_end2($;%) {
-	my ($s) = @_;
-	my $reply;
-
-	eval {
-		local $SIG{ALRM} = sub { die "timeout\n" };
-		local $SIG{PIPE} = sub { die "sigpipe\n" };
-		alarm(8);
-
-		local $/;
-		$reply = $s->getline();
-
-		alarm(0);
-	};
-	alarm(0);
-	if ($@) {
-		log_in("died: $@");
-		return undef;
-	}
-
-	log_in($reply);
-	return $reply;
 }
 
 ###############################################################################
