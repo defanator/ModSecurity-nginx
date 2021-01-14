@@ -67,7 +67,7 @@ http {
                 SecDebugLog %%TESTDIR%%/auditlog-debug-local.txt
                 SecDebugLogLevel 9
                 SecAuditEngine RelevantOnly
-                SecAuditLogParts AB
+                SecAuditLogParts ABIJDEFHZ
                 SecAuditLog %%TESTDIR%%/auditlog-local.txt
                 SecAuditLogType Serial
                 SecAuditLogStorageDir %%TESTDIR%%/
@@ -86,7 +86,7 @@ http {
             SecDebugLog %%TESTDIR%%/auditlog-debug-global.txt
             SecDebugLogLevel 9
             SecAuditEngine RelevantOnly
-            SecAuditLogParts AB
+            SecAuditLogParts ABIJDEFHZ
             SecAuditLog %%TESTDIR%%/auditlog-global.txt
             SecAuditLogType Serial
             SecAuditLogStorageDir %%TESTDIR%%/
@@ -114,7 +114,7 @@ mkdir($t->testdir() . '/http');
 $t->write_file("/http/403.html", $custom_txt);
 
 $t->run();
-$t->plan(8);
+$t->plan(10);
 
 ###############################################################################
 
@@ -156,6 +156,14 @@ like($t3, qr/$custom_txt/, 'ModSecurity at server / root');
 like($t4, qr/$index_txt/, 'ModSecurity at server / other');
 like($global, qr/what=root/, 'ModSecurity at server / root present in auditlog');
 unlike($global, qr/what=other/, 'ModSecurity at server / other not present in auditlog');
+
+TODO: {
+local $TODO = 'not yet';
+
+like($local, qr/Access denied with code 403/, 'ModSecurity at location / 403 in auditlog');
+like($global, qr/Access denied with code 403/, 'ModSecurity at server / 403 in auditlog');
+
+}
 
 ###############################################################################
 
