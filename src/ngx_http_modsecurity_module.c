@@ -207,6 +207,14 @@ ngx_http_modsecurity_process_intervention (Transaction *transaction, ngx_http_re
 
     if (intervention.status != 200)
     {
+        /**
+         * FIXME: this one will call msc_process_logging() but code may be
+         * 200 instead of 403 by some reason.
+         *
+         */
+        r->err_status = intervention.status;
+        r->headers_out.status = intervention.status;
+        dd("intervention -- calling log handler manually with code: %d", intervention.status);
         ngx_http_modsecurity_log_handler(r);
         ctx->logged = 1;
 
