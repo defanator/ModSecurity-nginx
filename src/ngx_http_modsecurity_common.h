@@ -137,7 +137,7 @@ typedef struct {
 extern ngx_module_t ngx_http_modsecurity_module;
 
 /* ngx_http_modsecurity_module.c */
-int ngx_http_modsecurity_process_intervention (Transaction *transaction, ngx_http_request_t *r);
+int ngx_http_modsecurity_process_intervention (Transaction *transaction, ngx_http_request_t *r, ngx_int_t early_log);
 ngx_http_modsecurity_ctx_t *ngx_http_modsecurity_create_ctx(ngx_http_request_t *r);
 char *ngx_str_to_char(ngx_str_t a, ngx_pool_t *p);
 ngx_pool_t *ngx_http_modsecurity_pcre_malloc_init(ngx_pool_t *pool);
