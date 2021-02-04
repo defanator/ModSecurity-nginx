@@ -157,13 +157,8 @@ like($t4, qr/$index_txt/, 'ModSecurity at server / other');
 like($global, qr/what=root/, 'ModSecurity at server / root present in auditlog');
 unlike($global, qr/what=other/, 'ModSecurity at server / other not present in auditlog');
 
-TODO: {
-local $TODO = 'not yet';
-
 like($local, qr/Access denied with code 403/, 'ModSecurity at location / 403 in auditlog');
 like($global, qr/Access denied with code 403/, 'ModSecurity at server / 403 in auditlog');
-
-}
 
 ###############################################################################
 
